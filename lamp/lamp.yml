@@ -1,0 +1,68 @@
+# Setup LAMP Stack
+- hosts: LAMP
+  become: true
+  tasks:
+  - name: Installing Apache
+    apt: name=apache2 state=latest
+
+  - name: Starting apache server
+    service: name=apache2 state=started
+ 
+  - name: Installing MySQL Server
+    apt: name= {{ item }}  state=latest
+    with_items:
+      - mysql-server
+      - mysql-client
+      - python-mysqldb
+
+  - name: Starting MySQL Serever
+    service: name=mysql state=started
+
+  - name: Installing PHP
+    apt: name = "{{ item }}" state=latest
+    with_items:
+    - php7.0
+    - libapache2-mod-php7.0
+    - libapache2-mod-php
+    - php7.0-mysql
+    - php7.0-curl
+    - php7.0-mbstring
+    - php7.0-gd
+    - php7.0-xml
+    - php7.0-xmlrpc
+    - php7.0-intl
+    - php7.0-soap
+    - php7.0-zip
+    - python-apt
+    - python3-apt
+    - python3-mysql
+    - python-mysql
+    - python3-mysqldb
+    - python3-pymysql
+    - php-mysql
+  - name: Installing libapache2-mod-php
+    apt: name=libapache2-mod-php state=latest
+  - name: Restarting Apache2
+    service: name=apache2 state=restarted
+
+  - name: Installing PyMySQL
+    apt: name=python3-pip state=latest
+  
+  - name: Installing PyMySQL part 2
+    pip: name=PyMySQL state=present    
+
+  - name: Changing /var/www/html permissions 
+    file: dest=/var/www/html/wordpress  owner=www-data group=www-data recurse=yes
+  
+  - name: Setting up  MySQL root creds
+    template: src=templates/my.cnf dest=/root/.my.cnf 
+
+  - name: Copying wp-config file
+    copy: src=source/wp-config.php dest=/var/www/html/wordpress/wp-config.php
+
+  - name: Restarting apache and mysql services
+    service: name= "{{ item }}"
+     state=restarted
+    with_items:
+      - apache2
+      - mysql
